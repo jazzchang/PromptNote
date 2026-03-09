@@ -3,6 +3,7 @@
 一款收集即梦图片提示词至 Eagle图库管理软件的浏览器扩展插件。支持 Chrome & Edge。
 
 <img src="assets/screenshot.png" width="400">
+<img src="https://github.com/user-attachments/assets/d7f0bb4c-fdc4-4d60-acc1-b60af1e11436" width="400">
 
 ---
 
