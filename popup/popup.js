@@ -212,7 +212,7 @@ function extractPageData(mode) {
 // ═══════════════════════════════════════════════════════════════════════
 // Step 2: popup 上下文直接调 Eagle API（无 Origin 头 → 无 401）
 // ═══════════════════════════════════════════════════════════════════════
-async function callEagleApi(imageUrl, name, annotation, folderId) {
+async function callEagleApi(imageUrl, name, annotation, folderId, websiteUrl) {
     const { eagleApiToken, autoTags: at } = await chrome.storage.local.get(['eagleApiToken', 'autoTags']);
     const token = eagleApiToken || '';
     const headers = { 'Content-Type': 'application/json' };
@@ -221,7 +221,7 @@ async function callEagleApi(imageUrl, name, annotation, folderId) {
     const body = {
         url: imageUrl,
         name: name || '即梦AI作品',
-        website: 'https://jimeng.jianying.com',
+        website: websiteUrl || 'https://jimeng.jianying.com',
         annotation: annotation || '',
         tags: at !== false ? ['即梦', 'PromptNote', 'AI生成'] : [],
         headers: { referer: 'https://jimeng.jianying.com/' }
@@ -276,7 +276,7 @@ function setupEvents() {
                 name = annotation.substring(0, 60).replace(/\s+/g, ' ').trim();
             }
 
-            await callEagleApi(data.url, name, annotation, folderSelect.value);
+            await callEagleApi(data.url, name, annotation, folderSelect.value, data.pageUrl);
             showStatus(`已保存「${name}」！`, 'success');
 
             // UI Feedback that lasts until window closes

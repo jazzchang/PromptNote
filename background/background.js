@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // 单张保存（供 content script 的画廊按钮调用）
-async function eagleSaveOne({ url, name, annotation, folderId, autoTags, token }) {
+async function eagleSaveOne({ url, name, website, annotation, folderId, autoTags, token }) {
     try {
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${String(token).replace(/[^\x20-\x7E]/g, '')}`;
@@ -28,7 +28,7 @@ async function eagleSaveOne({ url, name, annotation, folderId, autoTags, token }
         const body = {
             url,
             name: name || '即梦AI作品',
-            website: 'https://jimeng.jianying.com',
+            website: website || 'https://jimeng.jianying.com',
             annotation: annotation || '',
             tags: autoTags ? ['即梦', 'PromptNote', 'AI生成'] : [],
             headers: { referer: 'https://jimeng.jianying.com/' }

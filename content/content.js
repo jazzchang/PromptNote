@@ -126,6 +126,7 @@
 
         const { prompt, title } = extractPromptAndTitle(img);
         const annotation = store.autoAnnotation !== false ? prompt : '';
+        const websiteUrl = findImagePageUrl(img);
 
         try {
             const result = await chrome.runtime.sendMessage({
@@ -133,6 +134,7 @@
                 payload: {
                     url,
                     name: title,
+                    website: websiteUrl,
                     annotation: annotation,
                     folderId: store.selectedFolderId || '',
                     autoTags: store.autoTags !== false,
@@ -156,6 +158,18 @@
     }
 
     // ─── 工具函数 ────────────────────────────────────────────────────────────
+    function findImagePageUrl(img) {
+        let el = img.parentElement;
+        for (let i = 0; i < 10; i++) {
+            if (!el || el === document.body) break;
+            if (el.tagName === 'A' && el.href) {
+                return el.href;
+            }
+            el = el.parentElement;
+        }
+        return location.href;
+    }
+
     function extractPromptAndTitle(img) {
         let prompt = '';
         let title = '';
