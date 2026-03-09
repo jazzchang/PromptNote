@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咒语便签 - PromptNote</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <style>
+        /* ─── Reset & Variables ─────────────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0f0f13;
+            --bg-secondary: #1a1a24;
+            --bg-card: #1e1e2e;
+            --bg-input: #252535;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-2: #8b5cf6;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --text-primary: #f0f0ff;
+            --text-secondary: #a0a0b8;
+            --text-muted: #6b6b80;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(99, 102, 241, 0.4);
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            width: 360px;
+            min-height: 480px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* ─── Header ────────────────────────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+            padding: 18px 20px 16px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            flex-shrink: 0;
+        }
+
+        .title-group h1 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.3px;
+        }
+
+        .title-group p {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Eagle连接状态 */
+        .eagle-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            margin-left: auto;
+        }
+
+        .eagle-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: none;
+        }
+
+        .eagle-status.connected {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #34d399;
+        }
+
+        .eagle-status.connected .dot {
+            background: #10b981;
+            animation: pulse-green 2s infinite;
+        }
+
+        .eagle-status.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .eagle-status.disconnected .dot {
+            background: #ef4444;
+        }
+
+        @keyframes pulse-green {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* ─── Not On Jimeng Warning ─────────────────────────────────────────── */
+        .not-jimeng-warning {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .not-jimeng-warning.show {
+            display: flex;
+        }
+
+        .warning-icon {
+            font-size: 48px;
+            filter: grayscale(0.3);
+        }
+
+        .warning-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .warning-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .open-jimeng-btn {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 4px;
+        }
+
+        .open-jimeng-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        /* ─── Main Content ──────────────────────────────────────────────────── */
+        .main-content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* ─── Section ───────────────────────────────────────────────────────── */
+        .section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 12px 14px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .section-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .section-body {
+            padding: 12px 14px;
+        }
+
+        /* ─── Folder Selector ───────────────────────────────────────────────── */
+        .folder-select-wrapper {
+            position: relative;
+        }
+
+        .folder-select {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            cursor: pointer;
+            appearance: none;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .folder-select:hover,
+        .folder-select:focus {
+            border-color: var(--border-hover);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .folder-select-arrow {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-muted);
+        }
+
+        .folder-refresh-btn {
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .folder-refresh-btn:hover {
+            color: var(--accent);
+            border-color: var(--border-hover);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        /* ─── Action Buttons ────────────────────────────────────────────────── */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 12px 14px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+        }
+
+        .action-btn.primary:hover {
+            background: linear-gradient(135deg, var(--accent-hover) 0%, #7c3aed 100%);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.55);
+            transform: translateY(-3px);
+        }
+
+        .action-btn.primary:active {
+            transform: translateY(-1px);
+        }
+
+        .action-btn svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .action-btn-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .action-btn-sub {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .action-btn.loading {
+            pointer-events: none;
+            animation: btn-loading 1.5s ease-in-out infinite;
+        }
+
+        @keyframes btn-loading {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Span full width button */
+        .action-btn.full {
+            grid-column: 1 / -1;
+            flex-direction: row;
+            padding: 12px 16px;
+            justify-content: flex-start;
+        }
+
+        .action-btn.full .action-btn-texts {
+            text-align: left;
+        }
+
+        /* ─── Settings Section ──────────────────────────────────────────────── */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .setting-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            left: 2px;
+            bottom: 2px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle input:checked+.toggle-slider::before {
+            transform: translateX(16px);
+            background: white;
+        }
+
+        /* ─── Status Bar ────────────────────────────────────────────────────── */
+        .status-bar {
+            margin: 0 16px 16px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .status-bar.show {
+            display: flex;
+        }
+
+        .status-bar.success {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #34d399;
+        }
+
+        .status-bar.error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+        }
+
+        .status-bar.info {
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            color: var(--accent);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── Footer ────────────────────────────────────────────────────────── */
+        .footer {
+            padding: 10px 16px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-info {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .footer-link {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+        }
+
+        .footer-link:hover {
+            color: var(--accent);
+        }
+
+        /* ─── Scrollbar ─────────────────────────────────────────────────────── */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ─── Eagle Not Running ─────────────────────────────────────────────── */
+        .eagle-offline-notice {
+            display: none;
+            margin: 0 16px;
+            padding: 12px 14px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: #f87171;
+            line-height: 1.6;
+        }
+
+        .eagle-offline-notice.show {
+            display: block;
+        }
+
+        /* ─── Token Input ────────────────────────────────────────────────────── */
+        .token-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 14px;
+        }
+
+        .token-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .token-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .token-input {
+            width: 100%;
+            padding: 9px 36px 9px 12px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            transition: var(--transition);
+            outline: none;
+            letter-spacing: 0.5px;
+        }
+
+        .token-input::placeholder {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+            letter-spacing: 0;
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .token-input:focus {
+            border-color: var(--border-hover);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .token-input.has-value {
+            border-color: rgba(16, 185, 129, 0.35);
+            background: rgba(16, 185, 129, 0.04);
+        }
+
+        .token-eye-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+        }
+
+        .token-eye-btn:hover {
+            color: var(--accent);
+            background: rgba(99, 102, 241, 0.08);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="logo">✨</div>
+            <div class="title-group">
+                <h1>咒语便签</h1>
+                <p>PromptNote · AI作品保存工具</p>
+            </div>
+            <div class="eagle-status disconnected" id="eagleStatus">
+                <div class="dot"></div>
+                <span id="eagleStatusText">检测中...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Not on Jimeng page warning -->
+    <div class="not-jimeng-warning" id="notJimengWarning">
+        <div class="warning-icon">🖼️</div>
+        <div class="warning-title">请先打开即梦网站</div>
+        <div class="warning-desc">
+            此插件专为即梦AI创作平台设计<br>
+            请先访问即梦，然后再使用此工具
+        </div>
+        <button class="open-jimeng-btn" id="openJimengBtn">打开即梦</button>
+    </div>
+
+    <!-- Main Content (shown only on Jimeng pages) -->
+    <div class="main-content" id="mainContent" style="display:none">
+
+        <!-- Eagle offline notice -->
+        <div class="eagle-offline-notice" id="eagleOfflineNotice">
+            ⚠️ Eagle 未运行，请先启动 Eagle 软件后再使用保存功能
+        </div>
+
+        <!-- 保存到文件夹 -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">📁 保存位置</span>
+                <span class="section-badge" id="folderCount">加载中...</span>
+            </div>
+            <div class="section-body">
+                <div class="folder-select-wrapper">
+                    <select class="folder-select" id="folderSelect">
+                        <option value="">🏠 默认库（不指定文件夹）</option>
+                    </select>
+                    <div class="folder-select-arrow">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+                <button class="folder-refresh-btn" id="refreshFolderBtn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    刷新文件夹列表
+                </button>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">⚡ 快速操作</span>
+            </div>
+            <div class="action-grid">
+                <!-- 保存当前详情页图片 -->
+                <button class="action-btn primary full" id="saveCurrentBtn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3v13" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                        <path d="M8 12l4 4 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2" stroke="white" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+                    <div class="action-btn-texts">
+                        <div class="action-btn-label">保存当前图片</div>
+                        <div class="action-btn-sub">自动提取相关标题与提示词</div>
+                    </div>
+                </button>
+
+            </div>
+        </div>
+
+        <!-- 设置 -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-title">⚙️ 设置</span>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">自动添加提示词</div>
+                    <div class="setting-desc">将提示词保存为Eagle注释</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="autoAnnotation" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">添加来源标签</div>
+                    <div class="setting-desc">自动添加"即梦"标签</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="autoTags" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">记住文件夹选择</div>
+                    <div class="setting-desc">下次打开时保留上次选择</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="rememberFolder" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <!-- Eagle API Token -->
+            <div class="token-row">
+                <div class="token-label-row">
+                    <div>
+                        <div class="setting-label">Eagle API Token</div>
+                        <div class="setting-desc">Eagle 4.0+ 版本需要填写</div>
+                    </div>
+                    <span id="tokenStatus" style="font-size:10px;color:var(--text-muted)"></span>
+                </div>
+                <div class="token-input-wrap">
+                    <input type="password" id="eagleApiToken" class="token-input" placeholder="粘贴 Eagle API Token（可选）"
+                        autocomplete="off" spellcheck="false">
+                    <button class="token-eye-btn" id="tokenEyeBtn" title="显示/隐藏Token">
+                        <svg id="eyeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" />
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar" id="statusBar">
+        <span id="statusIcon">✓</span>
+        <span id="statusText"></span>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer" id="mainFooter" style="display:none">
+        <span class="footer-info">Eagle 本地API · localhost:41595</span>
+        <a href="https://jimeng.jianying.com/" class="footer-link" id="gotoJimeng">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            即梦
+        </a>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
