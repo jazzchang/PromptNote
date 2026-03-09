@@ -2,7 +2,7 @@
 
 将即梦 AI 创作平台上的作品一键保存到 Eagle 图库管理软件，自动提取提示词并添加为注释。
 
-![screenshot](assets/screenshot.png)
+<img src="assets/screenshot.png" width="400">
 
 ---
 
