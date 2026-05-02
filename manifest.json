@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "咒语便签 - PromptNote",
-  "version": "1.2.8",
-  "description": "PromptNote · 将即梦AI作品一键保存到Eagle，自动提取提示词并添加到注释",
+  "version": "2.0.0",
+  "description": "PromptNote · 将即梦AI作品一键保存到Eagle，自动提取提示词并添加到注释。支持批量保存、自定义标签、提示词格式化导出。",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -12,11 +12,15 @@
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "tabs",
+    "downloads"
   ],
   "host_permissions": [
     "https://jimeng.jianying.com/*",
-    "http://localhost:41595/*"
+    "https://*.byteimg.com/*",
+    "http://localhost:41595/*",
+    "http://127.0.0.1:41595/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -26,8 +30,9 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "即梦 → Eagle"
+    "default_title": "PromptNote - 即梦 → Eagle"
   },
+  "options_page": "options/options.html",
   "content_scripts": [
     {
       "matches": [
@@ -48,7 +53,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "icons/*"
+        "icons/*",
+        "options/*"
       ],
       "matches": [
         "https://jimeng.jianying.com/*"
