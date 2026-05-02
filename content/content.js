@@ -1,10 +1,12 @@
 /**
- * 咒语便签 - PromptNote
- * Content Script v2.2 — 画廊按钮注入
+ * 咒语便签 - PromptNote v2.0
+ * Content Script
  *
- * 保存流程：
- *   - 画廊按钮点击 → chrome.runtime.sendMessage(EAGLE_SAVE_ONE) → background 代理 Eagle API
- *   - background 的 fetch 无 Origin 头，不触发 Eagle 4.0 的 401
+ * 功能：
+ * - 全站适配：列表页、瀑布流、详情页提示词提取
+ * - 多选模式：支持页面上选择多个图片
+ * - 悬浮按钮：支持自定义位置与显示开关
+ * - 消息通信：与 popup 和 background 交互
  */
 
 (function () {
@@ -12,21 +14,307 @@
 
     let isInitialized = false;
     let injectedImgs = new WeakSet();
-    let settings = { autoAnnotation: true, autoTags: true };
+    let settings = {
+        autoAnnotation: true,
+        autoTags: true,
+        enableFloatBtn: true,
+        floatButtonPosition: 'top-left'
+    };
+
+    let selectionMode = false;
+    let selectedImgs = new Set();
+    let floatPanel = null;
+
+    const POSITION_STYLES = {
+        'top-left': { top: '20px', left: '20px', right: 'auto', bottom: 'auto' },
+        'top-center': { top: '20px', left: '50%', right: 'auto', bottom: 'auto', transform: 'translateX(-50%)' },
+        'top-right': { top: '20px', left: 'auto', right: '20px', bottom: 'auto' },
+        'middle-left': { top: '50%', left: '20px', right: 'auto', bottom: 'auto', transform: 'translateY(-50%)' },
+        'middle-center': { top: '50%', left: '50%', right: 'auto', bottom: 'auto', transform: 'translate(-50%, -50%)' },
+        'middle-right': { top: '50%', left: 'auto', right: '20px', bottom: 'auto', transform: 'translateY(-50%)' },
+        'bottom-left': { top: 'auto', left: '20px', right: 'auto', bottom: '20px' },
+        'bottom-center': { top: 'auto', left: '50%', right: 'auto', bottom: '20px', transform: 'translateX(-50%)' },
+        'bottom-right': { top: 'auto', left: 'auto', right: '20px', bottom: '20px' }
+    };
 
     function init() {
         if (isInitialized) return;
         isInitialized = true;
         loadSettings();
         createToastContainer();
+        createFloatPanel();
+        setupMessageListener();
         startWatcher();
     }
 
-    function loadSettings() {
-        chrome.storage.local.get(['autoAnnotation', 'autoTags'], r => {
-            settings.autoAnnotation = r.autoAnnotation !== false;
-            settings.autoTags = r.autoTags !== false;
+    async function loadSettings() {
+        const saved = await new Promise(r => chrome.storage.local.get([
+            'autoAnnotation',
+            'autoTags',
+            'enableFloatBtn',
+            'floatButtonPosition'
+        ], r));
+
+        settings.autoAnnotation = saved.autoAnnotation !== false;
+        settings.autoTags = saved.autoTags !== false;
+        settings.enableFloatBtn = saved.enableFloatBtn !== false;
+        settings.floatButtonPosition = saved.floatButtonPosition || 'top-left';
+
+        updateFloatPanelPosition();
+        updateFloatPanelVisibility();
+    }
+
+    function createFloatPanel() {
+        if (document.getElementById('pn-float-panel')) return;
+
+        floatPanel = document.createElement('div');
+        floatPanel.id = 'pn-float-panel';
+        floatPanel.className = 'pn-float-panel';
+        floatPanel.innerHTML = `
+            <div class="pn-float-toggle">
+                <button class="pn-float-btn" id="pn-toggle-selection" title="选择模式">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span class="pn-float-txt">选择</span>
+                </button>
+            </div>
+            <div class="pn-float-selection" style="display:none;">
+                <div class="pn-selection-count">
+                    <span>已选: <strong id="pn-selected-count">0</strong> 张</span>
+                </div>
+                <div class="pn-selection-actions">
+                    <button class="pn-mini-btn" id="pn-select-all" title="全选">全选</button>
+                    <button class="pn-mini-btn" id="pn-deselect-all" title="取消">取消</button>
+                    <button class="pn-mini-btn primary" id="pn-save-selected" title="保存选中">保存</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(floatPanel);
+
+        floatPanel.querySelector('#pn-toggle-selection').addEventListener('click', toggleSelectionMode);
+        floatPanel.querySelector('#pn-select-all').addEventListener('click', selectAllImages);
+        floatPanel.querySelector('#pn-deselect-all').addEventListener('click', deselectAllImages);
+        floatPanel.querySelector('#pn-save-selected').addEventListener('click', saveSelectedImages);
+
+        updateFloatPanelPosition();
+    }
+
+    function updateFloatPanelPosition() {
+        if (!floatPanel) return;
+
+        const posStyle = POSITION_STYLES[settings.floatButtonPosition] || POSITION_STYLES['top-left'];
+
+        floatPanel.style.top = posStyle.top;
+        floatPanel.style.left = posStyle.left;
+        floatPanel.style.right = posStyle.right;
+        floatPanel.style.bottom = posStyle.bottom;
+
+        if (posStyle.transform) {
+            floatPanel.style.transform = posStyle.transform;
+        }
+    }
+
+    function updateFloatPanelVisibility() {
+        if (!floatPanel) return;
+        floatPanel.style.display = settings.enableFloatBtn ? 'block' : 'none';
+    }
+
+    function toggleSelectionMode() {
+        selectionMode = !selectionMode;
+
+        const toggleBtn = floatPanel.querySelector('#pn-toggle-selection');
+        const selectionPanel = floatPanel.querySelector('.pn-float-selection');
+
+        if (selectionMode) {
+            toggleBtn.classList.add('active');
+            toggleBtn.querySelector('.pn-float-txt').textContent = '退出';
+            selectionPanel.style.display = 'block';
+            document.body.classList.add('pn-selection-mode');
+            injectSelectionUI();
+        } else {
+            toggleBtn.classList.remove('active');
+            toggleBtn.querySelector('.pn-float-txt').textContent = '选择';
+            selectionPanel.style.display = 'none';
+            document.body.classList.remove('pn-selection-mode');
+            deselectAllImages();
+            removeSelectionUI();
+        }
+    }
+
+    function injectSelectionUI() {
+        const imgs = document.querySelectorAll(
+            'img[src*="byteimg.com"], img[src*="dreamina-sign"], img[src*="lf26-cn"], img[src*="lf3-cn"]'
+        );
+
+        imgs.forEach(img => {
+            if (isIconLike(img.src)) return;
+            if (img.naturalWidth < 80 && img.naturalWidth !== 0) return;
+            if (img.offsetWidth < 80) return;
+
+            addSelectionOverlay(img);
         });
+    }
+
+    function removeSelectionUI() {
+        document.querySelectorAll('.pn-selection-overlay').forEach(el => el.remove());
+        document.querySelectorAll('.pn-image-selected').forEach(el => el.classList.remove('pn-image-selected'));
+    }
+
+    function addSelectionOverlay(img) {
+        const posParent = findPositionParent(img);
+        if (!posParent) return;
+
+        if (posParent.querySelector('.pn-selection-overlay')) return;
+
+        const cs = window.getComputedStyle(posParent);
+        if (cs.position === 'static') posParent.style.position = 'relative';
+
+        const overlay = document.createElement('div');
+        overlay.className = 'pn-selection-overlay';
+        overlay.innerHTML = `
+            <div class="pn-selection-checkbox">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12l5 5L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        `;
+
+        overlay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            toggleImageSelection(img, overlay);
+        });
+
+        posParent.appendChild(overlay);
+    }
+
+    function toggleImageSelection(img, overlay) {
+        if (selectedImgs.has(img)) {
+            selectedImgs.delete(img);
+            overlay.classList.remove('selected');
+            img.classList.remove('pn-image-selected');
+        } else {
+            selectedImgs.add(img);
+            overlay.classList.add('selected');
+            img.classList.add('pn-image-selected');
+        }
+        updateSelectedCount();
+    }
+
+    function selectAllImages() {
+        document.querySelectorAll('.pn-selection-overlay').forEach((overlay, index) => {
+            const img = findImageFromOverlay(overlay);
+            if (img) {
+                selectedImgs.add(img);
+                overlay.classList.add('selected');
+                img.classList.add('pn-image-selected');
+            }
+        });
+        updateSelectedCount();
+    }
+
+    function deselectAllImages() {
+        selectedImgs.clear();
+        document.querySelectorAll('.pn-selection-overlay').forEach(overlay => {
+            overlay.classList.remove('selected');
+        });
+        document.querySelectorAll('.pn-image-selected').forEach(img => {
+            img.classList.remove('pn-image-selected');
+        });
+        updateSelectedCount();
+    }
+
+    function findImageFromOverlay(overlay) {
+        const parent = overlay.parentElement;
+        if (!parent) return null;
+        return parent.querySelector('img[src*="byteimg.com"], img[src*="dreamina-sign"], img[src*="lf26-cn"], img[src*="lf3-cn"]');
+    }
+
+    function updateSelectedCount() {
+        const countEl = floatPanel.querySelector('#pn-selected-count');
+        if (countEl) {
+            countEl.textContent = selectedImgs.size;
+        }
+
+        const saveBtn = floatPanel.querySelector('#pn-save-selected');
+        if (saveBtn) {
+            saveBtn.disabled = selectedImgs.size === 0;
+        }
+    }
+
+    async function saveSelectedImages() {
+        if (selectedImgs.size === 0) {
+            showToast('请先选择要保存的图片', 'error');
+            return;
+        }
+
+        const store = await new Promise(r => chrome.storage.local.get([
+            'eagleApiToken',
+            'selectedFolderId',
+            'autoTags',
+            'autoAnnotation',
+            'customTags'
+        ], r));
+
+        const items = [];
+        const failedUrls = [];
+
+        for (const img of selectedImgs) {
+            const url = cleanUrl(img.src);
+            if (!url) {
+                failedUrls.push(img.src);
+                continue;
+            }
+
+            const { prompt, title } = extractPromptAndTitle(img);
+            const websiteUrl = findImagePageUrl(img);
+
+            items.push({
+                url,
+                name: title,
+                prompt,
+                website: websiteUrl,
+                thumbnail: img.src
+            });
+        }
+
+        if (items.length === 0) {
+            showToast('没有有效的图片可保存', 'error');
+            return;
+        }
+
+        showToast(`正在保存 ${items.length} 张图片...`, 'info');
+
+        try {
+            const result = await chrome.runtime.sendMessage({
+                type: 'EAGLE_SAVE_BATCH',
+                payload: {
+                    items,
+                    folderId: store.selectedFolderId || '',
+                    token: store.eagleApiToken || '',
+                    customTags: store.customTags || [],
+                    note: ''
+                }
+            });
+
+            if (result) {
+                if (result.successCount === result.total) {
+                    showToast(`已成功保存 ${result.successCount} 张图片！`, 'success');
+                } else {
+                    showToast(`保存完成：成功 ${result.successCount} 张，失败 ${result.failCount} 张`, 'info');
+                }
+
+                deselectAllImages();
+                toggleSelectionMode();
+            }
+        } catch (err) {
+            showToast('保存失败：' + err.message, 'error');
+        }
     }
 
     // ─── 页面监听 ─────────────────────────────────────────────────────────────
@@ -35,7 +323,12 @@
 
         new MutationObserver(() => {
             clearTimeout(timer);
-            timer = setTimeout(injectButtons, 600);
+            timer = setTimeout(() => {
+                injectButtons();
+                if (selectionMode) {
+                    injectSelectionUI();
+                }
+            }, 600);
         }).observe(document.body, { childList: true, subtree: true, attributes: false });
 
         let lastUrl = location.href;
@@ -44,11 +337,18 @@
                 lastUrl = location.href;
                 injectedImgs = new WeakSet();
                 clearTimeout(timer);
-                timer = setTimeout(injectButtons, 1500);
+                timer = setTimeout(() => {
+                    injectButtons();
+                    if (selectionMode) {
+                        injectSelectionUI();
+                    }
+                }, 1500);
             }
         }, 500);
 
-        setTimeout(injectButtons, 1500);
+        setTimeout(() => {
+            injectButtons();
+        }, 1500);
     }
 
     // ─── 注入"添加咒语"按钮 ──────────────────────────────────────────────────
@@ -72,17 +372,17 @@
         const posParent = findPositionParent(img);
         if (!posParent) return;
 
-        // 防重复
         if (posParent.querySelector(`[data-pn-src="${img.src.substring(0, 60)}"]`)) return;
 
         const cs = window.getComputedStyle(posParent);
         if (cs.position === 'static') posParent.style.position = 'relative';
 
+        const btn = createSpellBtn();
+        btn.dataset.pnSrc = img.src.substring(0, 60);
+
         const imgRect = img.getBoundingClientRect();
         const parentRect = posParent.getBoundingClientRect();
 
-        const btn = createSpellBtn();
-        btn.dataset.pnSrc = img.src.substring(0, 60);
         btn.style.top = (imgRect.top - parentRect.top + 8) + 'px';
         btn.style.left = (imgRect.left - parentRect.left + 8) + 'px';
 
@@ -111,7 +411,7 @@
         return img.parentElement;
     }
 
-    // ─── 保存处理（通过 background 代理，避免 Origin 头导致的 Eagle 401）────
+    // ─── 保存处理 ────────────────────────────────────────────────────────────
     async function handleSave(img, btn) {
         const url = cleanUrl(img.src);
         if (!url) { showToast('图片链接无效', 'error'); return; }
@@ -121,7 +421,7 @@
         btn.querySelector('.pn-btn-txt').textContent = '保存中…';
 
         const store = await new Promise(r =>
-            chrome.storage.local.get(['eagleApiToken', 'selectedFolderId', 'autoTags', 'autoAnnotation'], r)
+            chrome.storage.local.get(['eagleApiToken', 'selectedFolderId', 'autoTags', 'autoAnnotation', 'customTags'], r)
         );
 
         const { prompt, title } = extractPromptAndTitle(img);
@@ -138,7 +438,8 @@
                     annotation: annotation,
                     folderId: store.selectedFolderId || '',
                     autoTags: store.autoTags !== false,
-                    token: store.eagleApiToken || ''
+                    token: store.eagleApiToken || '',
+                    customTags: store.customTags || []
                 }
             });
 
@@ -162,7 +463,7 @@
         let el = img.parentElement;
         for (let i = 0; i < 10; i++) {
             if (!el || el === document.body) break;
-            if (el.tagName === 'A' && el.href) {
+            if (el.tagName === 'A' && el.href && !el.href.includes('javascript:')) {
                 return el.href;
             }
             el = el.parentElement;
@@ -176,24 +477,58 @@
 
         function findInParent() {
             let el = img.parentElement;
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 10; i++) {
                 if (!el || el === document.body) break;
-                const p = el.querySelector('[class*="prompt-value-container"]');
-                const t = el.querySelector('[class*="title-wrapper"]');
-                if (p || t) return { pEl: p, tEl: t };
+
+                const selectors = [
+                    '[class*="prompt-value-container"]',
+                    '[class*="prompt-text"]',
+                    '[class*="desc-prompt"]',
+                    '[class*="prompt-content"]'
+                ];
+
+                for (const selector of selectors) {
+                    const p = el.querySelector(selector);
+                    if (p) {
+                        const t = (p.innerText || p.textContent || '').trim();
+                        if (t.length > 5) {
+                            const titleEl = el.querySelector('[class*="title-wrapper"], [class*="img-title"], [class*="work-title"], [class*="author-name"]');
+                            let foundTitle = '';
+                            if (titleEl) {
+                                foundTitle = (titleEl.innerText || titleEl.textContent || '').trim();
+                                if (foundTitle.length > 60) foundTitle = foundTitle.substring(0, 60);
+                            }
+                            return { prompt: t, title: foundTitle };
+                        }
+                    }
+                }
+
                 el = el.parentElement;
             }
-            return { pEl: null, tEl: null };
+            return { prompt: '', title: '' };
         }
 
-        let { pEl, tEl } = findInParent();
-        if (!pEl) pEl = document.querySelector('[class*="prompt-value-container"]');
-        if (!tEl) tEl = document.querySelector('[class*="title-wrapper"]');
+        let { prompt: parentPrompt, title: parentTitle } = findInParent();
+        prompt = parentPrompt;
+        title = parentTitle;
 
-        if (pEl) prompt = (pEl.innerText || pEl.textContent || '').trim();
-        if (tEl) {
-            title = (tEl.innerText || tEl.textContent || '').trim();
-            if (title.length > 60) title = title.substring(0, 60);
+        if (!prompt) {
+            const globalSelectors = [
+                '[class*="prompt-value-container"]',
+                '[class*="prompt-text"]',
+                '[class*="desc-prompt"]'
+            ];
+
+            for (const selector of globalSelectors) {
+                const globalPrompt = document.querySelector(selector);
+                if (globalPrompt) {
+                    const t = (globalPrompt.innerText || globalPrompt.textContent || '').trim();
+                    if (t.length > 5) {
+                        prompt = t;
+                        break;
+                    }
+                }
+            }
         }
 
         if (!prompt && img.alt && img.alt.length > 5) {
@@ -212,13 +547,28 @@
         return { prompt, title: title || '即梦AI作品' };
     }
 
+    function hasSignatureParams(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.searchParams.has('x-signature') || 
+                   urlObj.searchParams.has('lk3s') ||
+                   urlObj.searchParams.has('sign') ||
+                   urlObj.searchParams.has('x-expires');
+        } catch {
+            return /x-signature|lk3s=|sign=|x-expires/.test(url);
+        }
+    }
+
     function cleanUrl(url) {
         if (!url || url.startsWith('data:') || url.startsWith('blob:')) return null;
+        if (hasSignatureParams(url)) {
+            return url;
+        }
         return url.replace(/(aigc_resize)[_:](\d+)[_:](\d+)/g, '$1:2048:2048');
     }
 
     function isIconLike(url) {
-        return !url || /avatar|\/icon|logo|emoji|placeholder|default|\.ico/.test(url);
+        return !url || /avatar|\/icon|logo|emoji|placeholder|default|\.ico|favicon/.test(url);
     }
 
     // ─── 创建按钮 ────────────────────────────────────────────────────────────
@@ -234,6 +584,159 @@
       <span class="pn-btn-txt">添加咒语</span>
     `;
         return btn;
+    }
+
+    // ─── 消息监听 ────────────────────────────────────────────────────────────
+    function setupMessageListener() {
+        chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+            switch (msg.type) {
+                case 'EXTRACT_IMAGES':
+                    const images = extractAllImagesWithPrompts();
+                    sendResponse({ success: true, images });
+                    return true;
+
+                case 'GET_SETTINGS':
+                    sendResponse({ success: true, settings });
+                    return true;
+
+                case 'REFRESH_BUTTONS':
+                    injectedImgs = new WeakSet();
+                    injectButtons();
+                    sendResponse({ success: true });
+                    return true;
+            }
+        });
+    }
+
+    function extractAllImagesWithPrompts() {
+        function isIconLike(url) {
+            return !url || /avatar|\/icon|logo|emoji|placeholder|default|\.ico|favicon/.test(url);
+        }
+
+        function hasSignatureParams(url) {
+            try {
+                const urlObj = new URL(url);
+                return urlObj.searchParams.has('x-signature') || 
+                       urlObj.searchParams.has('lk3s') ||
+                       urlObj.searchParams.has('sign') ||
+                       urlObj.searchParams.has('x-expires');
+            } catch {
+                return /x-signature|lk3s=|sign=|x-expires/.test(url);
+            }
+        }
+
+        function cleanUrl(url) {
+            if (!url || url.startsWith('data:') || url.startsWith('blob:')) return null;
+            if (hasSignatureParams(url)) {
+                return url;
+            }
+            return url.replace(/(aigc_resize)[_:](\d+)[_:](\d+)/g, '$1:2048:2048');
+        }
+
+        function extractPromptFromContext(img) {
+            let prompt = '';
+            let title = '';
+
+            let el = img.parentElement;
+            for (let i = 0; i < 10; i++) {
+                if (!el || el === document.body) break;
+
+                const pEl = el.querySelector('[class*="prompt-value-container"], [class*="prompt-text"], [class*="desc-prompt"]');
+                if (pEl) {
+                    const t = (pEl.innerText || pEl.textContent || '').trim();
+                    if (t.length > 5) {
+                        prompt = t;
+                        break;
+                    }
+                }
+
+                const tEl = el.querySelector('[class*="title-wrapper"], [class*="img-title"], [class*="work-title"]');
+                if (tEl && !title) {
+                    const t = (tEl.innerText || tEl.textContent || '').trim();
+                    if (t.length > 0 && t.length <= 60) {
+                        title = t;
+                    }
+                }
+
+                el = el.parentElement;
+            }
+
+            if (!prompt) {
+                const globalPrompt = document.querySelector('[class*="prompt-value-container"], [class*="prompt-text"]');
+                if (globalPrompt) {
+                    const t = (globalPrompt.innerText || globalPrompt.textContent || '').trim();
+                    if (t.length > 5) prompt = t;
+                }
+            }
+
+            if (!prompt && img.alt && img.alt.length > 5) {
+                prompt = img.alt.trim();
+            }
+
+            if (!title && prompt) {
+                const firstWord = prompt.split(/[，,、。\s]/)[0].trim();
+                if (firstWord.length >= 2 && firstWord.length <= 20) {
+                    title = firstWord;
+                } else {
+                    title = prompt.substring(0, 40).trim();
+                }
+            }
+
+            return { prompt, title: title || '即梦AI作品' };
+        }
+
+        function findPageUrl(img) {
+            let el = img.parentElement;
+            for (let i = 0; i < 10; i++) {
+                if (!el || el === document.body) break;
+                if (el.tagName === 'A' && el.href && !el.href.includes('javascript:')) {
+                    return el.href;
+                }
+                el = el.parentElement;
+            }
+            return location.href;
+        }
+
+        const allImgs = Array.from(document.querySelectorAll('img[src]'));
+        const results = [];
+        const seenUrls = new Set();
+
+        const sortedImgs = allImgs
+            .filter(img => {
+                if (isIconLike(img.src)) return false;
+                if (img.naturalWidth < 80 && img.naturalWidth !== 0) return false;
+                if (img.offsetWidth < 50) return false;
+                if (!(img.src.includes('byteimg.com') || img.src.includes('dreamina') ||
+                      img.src.includes('lf3') || img.src.includes('lf26'))) return false;
+                return true;
+            })
+            .sort((a, b) => {
+                const aIsHd = a.src.includes('aigc_resize') || a.src.includes('aigc_');
+                const bIsHd = b.src.includes('aigc_resize') || b.src.includes('aigc_');
+                if (aIsHd !== bIsHd) return aIsHd ? -1 : 1;
+                return b.naturalHeight - a.naturalHeight;
+            });
+
+        for (const img of sortedImgs) {
+            const url = cleanUrl(img.src);
+            if (!url || seenUrls.has(url)) continue;
+            seenUrls.add(url);
+
+            const { prompt, title } = extractPromptFromContext(img);
+            const website = findPageUrl(img);
+
+            results.push({
+                url,
+                title,
+                prompt,
+                website,
+                thumbnail: img.src
+            });
+
+            if (results.length >= 50) break;
+        }
+
+        return results;
     }
 
     // ─── Toast ───────────────────────────────────────────────────────────────

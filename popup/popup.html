@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咒语便签 - PromptNote</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <style>
         /* ─── Reset & Variables ─────────────────────────────────────────────── */
         *,
@@ -21,6 +20,7 @@
             --bg-secondary: #1a1a24;
             --bg-card: #1e1e2e;
             --bg-input: #252535;
+            --bg-hover: rgba(99, 102, 241, 0.08);
             --accent: #6366f1;
             --accent-hover: #4f46e5;
             --accent-2: #8b5cf6;
@@ -32,15 +32,15 @@
             --text-muted: #6b6b80;
             --border: rgba(255, 255, 255, 0.08);
             --border-hover: rgba(99, 102, 241, 0.4);
-            --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             --radius: 12px;
             --radius-sm: 8px;
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            width: 360px;
-            min-height: 480px;
+            width: 380px;
+            min-height: 520px;
+            max-height: 600px;
             background: var(--bg-primary);
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
@@ -52,56 +52,77 @@
         /* ─── Header ────────────────────────────────────────────────────────── */
         .header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
-            padding: 18px 20px 16px;
+            padding: 14px 16px 12px;
             border-bottom: 1px solid var(--border);
             position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -30px;
-            right: -30px;
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
-            pointer-events: none;
         }
 
         .header-top {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 4px;
+            gap: 10px;
+            margin-bottom: 8px;
         }
 
         .logo {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            font-size: 16px;
+            box-shadow: 0 3px 12px rgba(99, 102, 241, 0.4);
             flex-shrink: 0;
         }
 
         .title-group h1 {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--text-primary);
-            letter-spacing: 0.3px;
         }
 
         .title-group p {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-secondary);
         }
 
-        /* Eagle连接状态 */
+        .header-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-hover);
+            color: var(--accent);
+        }
+
+        /* Eagle Status */
+        .eagle-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
         .eagle-status {
             display: flex;
             align-items: center;
@@ -110,14 +131,12 @@
             padding: 4px 10px;
             border-radius: 20px;
             border: 1px solid transparent;
-            margin-left: auto;
         }
 
         .eagle-status .dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            animation: none;
         }
 
         .eagle-status.connected {
@@ -142,18 +161,64 @@
         }
 
         @keyframes pulse-green {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
-            }
-
-            50% {
-                box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
-            }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+            50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
         }
 
-        /* ─── Not On Jimeng Warning ─────────────────────────────────────────── */
+        /* ─── Tabs ──────────────────────────────────────────────────────────── */
+        .tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            padding: 4px;
+            margin: 12px 12px 0;
+            border-radius: var(--radius-sm);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        .tab-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+
+        /* ─── Tab Content ───────────────────────────────────────────────────── */
+        .tab-content {
+            display: none;
+            padding: 12px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ─── Not Jimeng Warning ────────────────────────────────────────────── */
         .not-jimeng-warning {
             display: none;
             flex-direction: column;
@@ -161,7 +226,7 @@
             justify-content: center;
             padding: 40px 24px;
             text-align: center;
-            gap: 16px;
+            gap: 14px;
         }
 
         .not-jimeng-warning.show {
@@ -169,14 +234,13 @@
         }
 
         .warning-icon {
-            font-size: 48px;
+            font-size: 42px;
             filter: grayscale(0.3);
         }
 
         .warning-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
-            color: var(--text-primary);
         }
 
         .warning-desc {
@@ -200,55 +264,32 @@
 
         .open-jimeng-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5);
-        }
-
-        /* ─── Main Content ──────────────────────────────────────────────────── */
-        .main-content {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        /* ─── Section ───────────────────────────────────────────────────────── */
-        .section {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-
-        .section-header {
-            padding: 12px 14px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .section-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        .section-badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--accent);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
-        .section-body {
-            padding: 12px 14px;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
         }
 
         /* ─── Folder Selector ───────────────────────────────────────────────── */
+        .folder-section {
+            margin-bottom: 12px;
+        }
+
+        .folder-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .folder-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .folder-count {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
         .folder-select-wrapper {
             position: relative;
         }
@@ -271,7 +312,6 @@
         .folder-select:focus {
             border-color: var(--border-hover);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
         .folder-select-arrow {
@@ -283,93 +323,304 @@
             color: var(--text-muted);
         }
 
-        .folder-refresh-btn {
-            width: 100%;
-            margin-top: 8px;
-            padding: 8px;
-            background: transparent;
-            color: var(--text-muted);
-            border: 1px dashed var(--border);
+        /* ─── Tags Section ──────────────────────────────────────────────────── */
+        .tags-section {
+            margin-bottom: 12px;
+        }
+
+        .tags-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .tags-input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .tags-input {
+            flex: 1;
+            padding: 8px 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
             border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 12px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .tags-input:focus {
+            border-color: var(--border-hover);
+        }
+
+        .tags-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 24px;
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 12px;
             font-size: 11px;
+            color: var(--accent);
+            transition: var(--transition);
+        }
+
+        .tag-item:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.25);
+            color: #f87171;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        /* ─── Note Section ──────────────────────────────────────────────────── */
+        .note-section {
+            margin-bottom: 12px;
+        }
+
+        .note-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .note-input {
+            width: 100%;
+            min-height: 60px;
+            max-height: 100px;
+            padding: 8px 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 12px;
+            outline: none;
+            resize: vertical;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .note-input:focus {
+            border-color: var(--border-hover);
+        }
+
+        /* ─── Image List ────────────────────────────────────────────────────── */
+        .image-list-section {
+            margin-bottom: 12px;
+        }
+
+        .list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .list-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .list-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .list-action-btn {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
             cursor: pointer;
             transition: var(--transition);
+        }
+
+        .list-action-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--accent);
+        }
+
+        .image-list {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+        }
+
+        .image-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .image-item:last-child {
+            border-bottom: none;
+        }
+
+        .image-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .image-item.selected {
+            background: rgba(99, 102, 241, 0.12);
+        }
+
+        .image-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .image-item.selected .image-checkbox {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .image-checkbox svg {
+            width: 12px;
+            height: 12px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .image-item.selected .image-checkbox svg {
+            opacity: 1;
+        }
+
+        .image-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: var(--bg-input);
+            flex-shrink: 0;
+        }
+
+        .image-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .image-name {
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .image-prompt {
+            font-size: 10px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .image-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .mini-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+
+        .mini-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* ─── Action Buttons ────────────────────────────────────────────────── */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
         }
 
-        .folder-refresh-btn:hover {
-            color: var(--accent);
-            border-color: var(--border-hover);
-            background: rgba(99, 102, 241, 0.05);
-        }
-
-        /* ─── Action Buttons ────────────────────────────────────────────────── */
-        .action-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            padding: 12px 14px;
-        }
-
-        .action-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: var(--bg-input);
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: var(--transition);
-            text-align: center;
-        }
-
         .action-btn:hover {
-            background: rgba(99, 102, 241, 0.1);
             border-color: var(--border-hover);
-            color: var(--text-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: var(--bg-hover);
         }
 
         .action-btn.primary {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             border-color: transparent;
             color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
         }
 
         .action-btn.primary:hover {
-            background: linear-gradient(135deg, var(--accent-hover) 0%, #7c3aed 100%);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.55);
-            transform: translateY(-3px);
-        }
-
-        .action-btn.primary:active {
+            box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
             transform: translateY(-1px);
         }
 
-        .action-btn svg {
-            width: 22px;
-            height: 22px;
-            flex-shrink: 0;
-        }
-
-        .action-btn-label {
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        .action-btn-sub {
-            font-size: 10px;
-            opacity: 0.7;
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .action-btn.loading {
@@ -378,113 +629,172 @@
         }
 
         @keyframes btn-loading {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.6;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
 
-        /* Span full width button */
-        .action-btn.full {
-            grid-column: 1 / -1;
-            flex-direction: row;
-            padding: 12px 16px;
-            justify-content: flex-start;
-        }
-
-        .action-btn.full .action-btn-texts {
-            text-align: left;
-        }
-
-        /* ─── Settings Section ──────────────────────────────────────────────── */
-        .setting-row {
+        /* ─── History Tab ───────────────────────────────────────────────────── */
+        .history-search-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border);
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
-        .setting-row:last-child {
+        .history-search {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 12px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .history-search:focus {
+            border-color: var(--border-hover);
+        }
+
+        .format-select {
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .format-select:focus {
+            border-color: var(--border-hover);
+        }
+
+        .history-list {
+            max-height: 320px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+        }
+
+        .history-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .history-item:last-child {
             border-bottom: none;
         }
 
-        .setting-label {
-            font-size: 13px;
-            color: var(--text-primary);
+        .history-item:hover {
+            background: var(--bg-hover);
         }
 
-        .setting-desc {
-            font-size: 11px;
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .history-name {
+            font-size: 12px;
+            font-weight: 500;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-date {
+            font-size: 10px;
             color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        /* Toggle Switch */
-        .toggle {
-            position: relative;
-            width: 36px;
-            height: 20px;
             flex-shrink: 0;
         }
 
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        .history-prompt {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .toggle-slider {
-            position: absolute;
+        .history-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .history-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+            color: var(--accent);
+        }
+
+        .history-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .history-action-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-input);
+            transition: var(--transition);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            transition: 0.3s;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
-        .toggle-slider::before {
-            content: '';
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            left: 2px;
-            bottom: 2px;
-            background: var(--text-muted);
-            border-radius: 50%;
-            transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .history-action-btn:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-hover);
         }
 
-        .toggle input:checked+.toggle-slider {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .toggle input:checked+.toggle-slider::before {
-            transform: translateX(16px);
-            background: white;
+        .history-action-btn.primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-color: transparent;
+            color: white;
         }
 
         /* ─── Status Bar ────────────────────────────────────────────────────── */
         .status-bar {
-            margin: 0 16px 16px;
-            padding: 10px 14px;
+            margin: 0 12px 12px;
+            padding: 10px 12px;
             border-radius: var(--radius-sm);
             font-size: 12px;
             font-weight: 500;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 8px;
-            display: none;
             animation: slideUp 0.3s ease;
         }
 
@@ -515,39 +825,61 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        /* ─── Footer ────────────────────────────────────────────────────────── */
-        .footer {
-            padding: 10px 16px 14px;
-            border-top: 1px solid var(--border);
+        /* ─── Eagle Offline Notice ─────────────────────────────────────────── */
+        .eagle-offline-notice {
+            display: none;
+            margin: 0 12px;
+            padding: 10px 12px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: #f87171;
+            line-height: 1.5;
+        }
+
+        .eagle-offline-notice.show {
+            display: block;
+        }
+
+        /* ─── Batch Progress ────────────────────────────────────────────────── */
+        .batch-progress {
+            display: none;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            margin: 12px;
+        }
+
+        .batch-progress.show {
+            display: block;
+        }
+
+        .progress-text {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 8px;
         }
 
-        .footer-info {
-            font-size: 10px;
-            color: var(--text-muted);
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
         }
 
-        .footer-link {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: var(--transition);
-        }
-
-        .footer-link:hover {
-            color: var(--accent);
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            border-radius: 3px;
+            transition: width 0.3s ease;
         }
 
         /* ─── Scrollbar ─────────────────────────────────────────────────────── */
@@ -568,113 +900,56 @@
             background: var(--text-muted);
         }
 
-        /* ─── Eagle Not Running ─────────────────────────────────────────────── */
-        .eagle-offline-notice {
-            display: none;
-            margin: 0 16px;
-            padding: 12px 14px;
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            color: #f87171;
-            line-height: 1.6;
+        /* ─── Selection Info ────────────────────────────────────────────────── */
+        .selection-info {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
         }
 
-        .eagle-offline-notice.show {
-            display: block;
-        }
-
-        /* ─── Token Input ────────────────────────────────────────────────────── */
-        .token-row {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 10px 14px;
-        }
-
-        .token-label-row {
+        /* ─── Footer ────────────────────────────────────────────────────────── */
+        .footer {
+            padding: 8px 12px 12px;
+            border-top: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-
-        .token-input-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .token-input {
-            width: 100%;
-            padding: 9px 36px 9px 12px;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            font-family: 'SF Mono', 'Consolas', monospace;
-            transition: var(--transition);
-            outline: none;
-            letter-spacing: 0.5px;
-        }
-
-        .token-input::placeholder {
-            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
-            letter-spacing: 0;
+            font-size: 10px;
             color: var(--text-muted);
-            font-size: 11px;
         }
 
-        .token-input:focus {
-            border-color: var(--border-hover);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .token-input.has-value {
-            border-color: rgba(16, 185, 129, 0.35);
-            background: rgba(16, 185, 129, 0.04);
-        }
-
-        .token-eye-btn {
-            position: absolute;
-            right: 8px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-        }
-
-        .token-eye-btn:hover {
+        .footer a {
             color: var(--accent);
-            background: rgba(99, 102, 241, 0.08);
+            text-decoration: none;
         }
     </style>
 </head>
 
 <body>
-
     <!-- Header -->
     <div class="header">
         <div class="header-top">
             <div class="logo">✨</div>
             <div class="title-group">
                 <h1>咒语便签</h1>
-                <p>PromptNote · AI作品保存工具</p>
+                <p>v2.0.0 · 即梦AI作品采集</p>
             </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="refreshBtn" title="刷新">🔄</button>
+                <button class="icon-btn" id="settingsBtn" title="设置">⚙️</button>
+            </div>
+        </div>
+        <div class="eagle-status-row">
             <div class="eagle-status disconnected" id="eagleStatus">
                 <div class="dot"></div>
                 <span id="eagleStatusText">检测中...</span>
             </div>
+            <span style="font-size:10px;color:var(--text-muted)">localhost:<span id="eaglePortDisplay">41595</span></span>
         </div>
     </div>
 
-    <!-- Not on Jimeng page warning -->
+    <!-- Not Jimeng Warning -->
     <div class="not-jimeng-warning" id="notJimengWarning">
         <div class="warning-icon">🖼️</div>
         <div class="warning-title">请先打开即梦网站</div>
@@ -686,20 +961,32 @@
     </div>
 
     <!-- Main Content (shown only on Jimeng pages) -->
-    <div class="main-content" id="mainContent" style="display:none">
-
+    <div id="mainContent" style="display:none">
         <!-- Eagle offline notice -->
         <div class="eagle-offline-notice" id="eagleOfflineNotice">
             ⚠️ Eagle 未运行，请先启动 Eagle 软件后再使用保存功能
         </div>
 
-        <!-- 保存到文件夹 -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-title">📁 保存位置</span>
-                <span class="section-badge" id="folderCount">加载中...</span>
-            </div>
-            <div class="section-body">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="current">
+                🖼️ 当前页面
+                <span class="tab-badge" id="currentCount">0</span>
+            </button>
+            <button class="tab-btn" data-tab="history">
+                📋 历史记录
+                <span class="tab-badge" id="historyCount">0</span>
+            </button>
+        </div>
+
+        <!-- Current Tab -->
+        <div class="tab-content active" id="tab-current">
+            <!-- Folder Selector -->
+            <div class="folder-section">
+                <div class="folder-label-row">
+                    <span class="folder-label">📁 保存到</span>
+                    <span class="folder-count" id="folderCount">加载中...</span>
+                </div>
                 <div class="folder-select-wrapper">
                     <select class="folder-select" id="folderSelect">
                         <option value="">🏠 默认库（不指定文件夹）</option>
@@ -711,106 +998,105 @@
                         </svg>
                     </div>
                 </div>
-                <button class="folder-refresh-btn" id="refreshFolderBtn">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                        <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        <path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" />
-                    </svg>
-                    刷新文件夹列表
+            </div>
+
+            <!-- Tags -->
+            <div class="tags-section">
+                <div class="tags-label">🏷️ 自定义标签（点击删除）</div>
+                <div class="tags-input-row">
+                    <input type="text" class="tags-input" id="popupTagInput" placeholder="输入标签，按回车添加">
+                </div>
+                <div class="tags-display" id="popupTagsDisplay">
+                    <span style="font-size:11px;color:var(--text-muted)">暂无标签</span>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="note-section">
+                <div class="note-label">📝 备注（可选）</div>
+                <textarea class="note-input" id="popupNoteInput" placeholder="添加备注信息，会保存到 Eagle 注释中..."></textarea>
+            </div>
+
+            <!-- Image List -->
+            <div class="image-list-section">
+                <div class="list-header">
+                    <span class="list-title">📸 页面图片</span>
+                    <div class="list-actions">
+                        <button class="list-action-btn" id="selectAllBtn">全选</button>
+                        <button class="list-action-btn" id="deselectAllBtn">取消</button>
+                    </div>
+                </div>
+                <div class="image-list" id="imageList">
+                    <div class="history-empty">
+                        正在提取页面图片...<br>
+                        <span style="font-size:10px;color:var(--text-muted)">点击刷新按钮重新提取</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn" id="formatPromptBtn">
+                    ✨ 格式化提示词
+                </button>
+                <button class="action-btn" id="copyPromptBtn">
+                    📋 复制提示词
+                </button>
+                <button class="action-btn primary" id="saveSelectedBtn" disabled>
+                    💾 保存选中的图片到 Eagle
+                </button>
+            </div>
+
+            <div class="selection-info" id="selectionInfo">
+                已选择 0 张图片
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-content" id="tab-history">
+            <div class="history-search-row">
+                <input type="text" class="history-search" id="historySearch" placeholder="搜索历史记录（标题、提示词、标签）...">
+                <select class="format-select" id="formatSelect">
+                    <option value="cleaned">清理格式</option>
+                    <option value="linebreak">换行分隔</option>
+                    <option value="bullet">项目符号</option>
+                    <option value="markdown">Markdown</option>
+                </select>
+            </div>
+
+            <div class="history-list" id="historyList">
+                <div class="history-empty">
+                    暂无保存记录<br>
+                    <span style="font-size:10px;color:var(--text-muted)">保存的图片会显示在这里</span>
+                </div>
+            </div>
+
+            <div class="history-actions">
+                <button class="history-action-btn" id="exportHistoryBtn">
+                    📤 导出全部
+                </button>
+                <button class="history-action-btn" id="clearHistoryBtn">
+                    🗑️ 清空历史
+                </button>
+                <button class="history-action-btn primary" id="copyAllPromptsBtn">
+                    📋 复制全部提示词
                 </button>
             </div>
         </div>
-
-        <!-- 操作按钮 -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-title">⚡ 快速操作</span>
-            </div>
-            <div class="action-grid">
-                <!-- 保存当前详情页图片 -->
-                <button class="action-btn primary full" id="saveCurrentBtn">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 3v13" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-                        <path d="M8 12l4 4 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                        <path d="M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2" stroke="white" stroke-width="2"
-                            stroke-linecap="round" />
-                    </svg>
-                    <div class="action-btn-texts">
-                        <div class="action-btn-label">保存当前图片</div>
-                        <div class="action-btn-sub">自动提取相关标题与提示词</div>
-                    </div>
-                </button>
-
-            </div>
-        </div>
-
-        <!-- 设置 -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-title">⚙️ 设置</span>
-            </div>
-
-            <div class="setting-row">
-                <div>
-                    <div class="setting-label">自动添加提示词</div>
-                    <div class="setting-desc">将提示词保存为Eagle注释</div>
-                </div>
-                <label class="toggle">
-                    <input type="checkbox" id="autoAnnotation" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-
-            <div class="setting-row">
-                <div>
-                    <div class="setting-label">添加来源标签</div>
-                    <div class="setting-desc">自动添加"即梦"标签</div>
-                </div>
-                <label class="toggle">
-                    <input type="checkbox" id="autoTags" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-
-            <div class="setting-row">
-                <div>
-                    <div class="setting-label">记住文件夹选择</div>
-                    <div class="setting-desc">下次打开时保留上次选择</div>
-                </div>
-                <label class="toggle">
-                    <input type="checkbox" id="rememberFolder" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-
-            <!-- Eagle API Token -->
-            <div class="token-row">
-                <div class="token-label-row">
-                    <div>
-                        <div class="setting-label">Eagle API Token</div>
-                        <div class="setting-desc">Eagle 4.0+ 版本需要填写</div>
-                    </div>
-                    <span id="tokenStatus" style="font-size:10px;color:var(--text-muted)"></span>
-                </div>
-                <div class="token-input-wrap">
-                    <input type="password" id="eagleApiToken" class="token-input" placeholder="粘贴 Eagle API Token（可选）"
-                        autocomplete="off" spellcheck="false">
-                    <button class="token-eye-btn" id="tokenEyeBtn" title="显示/隐藏Token">
-                        <svg id="eyeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" />
-                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- Status bar -->
+    <!-- Batch Progress -->
+    <div class="batch-progress" id="batchProgress">
+        <div class="progress-text">
+            <span>批量保存中...</span>
+            <span id="progressCount">0 / 0</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
     <div class="status-bar" id="statusBar">
         <span id="statusIcon">✓</span>
         <span id="statusText"></span>
@@ -818,14 +1104,8 @@
 
     <!-- Footer -->
     <div class="footer" id="mainFooter" style="display:none">
-        <span class="footer-info">Eagle 本地API · localhost:41595</span>
-        <a href="https://jimeng.jianying.com/" class="footer-link" id="gotoJimeng">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            即梦
-        </a>
+        <span>PromptNote v2.0.0</span>
+        <a href="https://jimeng.jianying.com/" target="_blank" id="gotoJimeng">访问即梦 →</a>
     </div>
 
     <script src="popup.js"></script>

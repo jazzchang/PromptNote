@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咒语便签 - 设置</title>
+    <style>
+        /* ─── Reset & Variables ─────────────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0f0f13;
+            --bg-secondary: #1a1a24;
+            --bg-card: #1e1e2e;
+            --bg-input: #252535;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-2: #8b5cf6;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --text-primary: #f0f0ff;
+            --text-secondary: #a0a0b8;
+            --text-muted: #6b6b80;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(99, 102, 241, 0.4);
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0a0a10 100%);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* ─── Header ────────────────────────────────────────────────────────── */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-large {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+            margin: 0 auto 16px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .version-badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 10px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            color: var(--accent);
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        /* ─── Onboarding Wizard ─────────────────────────────────────────────── */
+        .onboarding-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 32px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .onboarding-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        }
+
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wizard-progress {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .wizard-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: var(--transition);
+        }
+
+        .wizard-dot.active {
+            background: var(--accent);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        .wizard-dot.completed {
+            background: var(--success);
+        }
+
+        .wizard-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .wizard-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        .wizard-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .wizard-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .wizard-actions.right {
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .btn-ghost:hover {
+            color: var(--accent);
+        }
+
+        /* ─── Connection Status Card ────────────────────────────────────────── */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+        }
+
+        .status-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .status-icon-wrapper.success {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .status-icon-wrapper.error {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .status-icon-wrapper.warning {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .status-info {
+            flex: 1;
+        }
+
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .status-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .test-connection-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* ─── Token Input Section ───────────────────────────────────────────── */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--border-hover);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input.has-value {
+            border-color: rgba(16, 185, 129, 0.35);
+            background: rgba(16, 185, 129, 0.04);
+        }
+
+        .form-input.error {
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .input-eye-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+        }
+
+        .input-eye-btn:hover {
+            color: var(--accent);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        /* ─── Settings Sections ─────────────────────────────────────────────── */
+        .settings-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-icon {
+            font-size: 18px;
+        }
+
+        .section-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            color: var(--accent);
+        }
+
+        .section-body {
+            padding: 8px 0;
+        }
+
+        /* ─── Setting Row ───────────────────────────────────────────────────── */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-row:hover {
+            background: rgba(99, 102, 241, 0.03);
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .setting-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ─── Toggle Switch ─────────────────────────────────────────────────── */
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle input:checked+.toggle-slider::before {
+            transform: translateX(20px);
+            background: white;
+        }
+
+        /* ─── Tags Section ──────────────────────────────────────────────────── */
+        .tags-container {
+            padding: 16px 24px;
+        }
+
+        .tags-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tags-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 32px;
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--accent);
+            transition: var(--transition);
+        }
+
+        .tag-item:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.25);
+            color: #f87171;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .tag-placeholder {
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        /* ─── Float Button Position ─────────────────────────────────────────── */
+        .position-preview {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            margin: 16px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .position-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 100%;
+            height: 100%;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .position-option {
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .position-option:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .position-option.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--accent);
+        }
+
+        .position-option .preview-btn {
+            width: 60px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 20px;
+            opacity: 0.7;
+        }
+
+        /* ─── Footer ────────────────────────────────────────────────────────── */
+        .page-footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .page-footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* ─── Error Help Section ────────────────────────────────────────────── */
+        .error-help {
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .error-help-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f87171;
+            margin-bottom: 10px;
+        }
+
+        .error-help-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .error-help-list li {
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 6px 0;
+            padding-left: 18px;
+            position: relative;
+        }
+
+        .error-help-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+        }
+
+        /* ─── Port Input ────────────────────────────────────────────────────── */
+        .port-input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .port-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .port-input {
+            width: 100px;
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            text-align: center;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .port-input:focus {
+            border-color: var(--border-hover);
+        }
+
+        /* ─── Success Animation ─────────────────────────────────────────────── */
+        .success-animation {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .checkmark-circle {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .checkmark-circle svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .checkmark-circle .background {
+            fill: var(--success);
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .checkmark-circle .checkmark {
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: drawCheck 0.5s ease-out 0.3s forwards;
+        }
+
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes drawCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* ─── Export Section ────────────────────────────────────────────────── */
+        .export-actions {
+            display: flex;
+            gap: 12px;
+            padding: 16px 24px;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            border-color: var(--border-hover);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .export-btn.primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-color: transparent;
+            color: white;
+        }
+
+        .export-btn.primary:hover {
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* ─── Scrollbar ─────────────────────────────────────────────────────── */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="logo-large">✨</div>
+            <h1 class="page-title">
+                咒语便签
+                <span class="version-badge">v2.0.0</span>
+            </h1>
+            <p class="page-subtitle">PromptNote · 即梦AI作品智能采集与管理工具</p>
+        </div>
+
+        <!-- Onboarding Wizard (shown only on first visit) -->
+        <div class="onboarding-card" id="onboardingCard" style="display:none">
+            <div class="wizard-progress" id="wizardProgress">
+                <div class="wizard-dot active"></div>
+                <div class="wizard-dot"></div>
+                <div class="wizard-dot"></div>
+                <div class="wizard-dot"></div>
+            </div>
+
+            <!-- Step 1: Welcome -->
+            <div class="wizard-step active" id="step1">
+                <div class="wizard-icon">🚀</div>
+                <h2 class="wizard-title">欢迎使用咒语便签！</h2>
+                <p class="wizard-desc">
+                    咒语便签可以帮您一键采集即梦AI平台上的精美作品，<br>
+                    自动提取提示词并同步保存到 Eagle 图库中。<br><br>
+                    让我们用几分钟完成初始配置，开启高效的素材收集之旅。
+                </p>
+                <div class="wizard-actions right">
+                    <button class="btn btn-primary" id="startSetupBtn">开始配置</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Eagle Connection -->
+            <div class="wizard-step" id="step2">
+                <div class="wizard-icon">🦅</div>
+                <h2 class="wizard-title">连接 Eagle 图库</h2>
+                <p class="wizard-desc">
+                    请确保您的 Eagle 软件已在运行。<br>
+                    Eagle 会在本地启动 API 服务（默认端口 41595），我们需要检测并连接它。
+                </p>
+
+                <div class="connection-status" id="onboardingConnectionStatus">
+                    <div class="status-icon-wrapper warning" id="onboardingStatusIcon">
+                        ⏳
+                    </div>
+                    <div class="status-info">
+                        <div class="status-title" id="onboardingStatusTitle">等待检测...</div>
+                        <div class="status-detail" id="onboardingStatusDetail">点击下方按钮检测 Eagle 连接状态</div>
+                    </div>
+                    <button class="btn btn-primary test-connection-btn" id="onboardingTestBtn">检测连接</button>
+                </div>
+
+                <div class="error-help" id="onboardingErrorHelp" style="display:none">
+                    <div class="error-help-title">连接失败？请检查以下几点：</div>
+                    <ul class="error-help-list">
+                        <li>Eagle 软件是否已启动？</li>
+                        <li>Eagle 的 API 服务端口是否被占用？</li>
+                        <li>防火墙是否阻止了本地连接？</li>
+                        <li>如果是 Eagle 4.0+ 版本，需要填写 API Token</li>
+                    </ul>
+                </div>
+
+                <div class="wizard-actions">
+                    <button class="btn btn-ghost" id="step2BackBtn">上一步</button>
+                    <button class="btn btn-primary" id="step2NextBtn" disabled>下一步</button>
+                </div>
+            </div>
+
+            <!-- Step 3: API Token -->
+            <div class="wizard-step" id="step3">
+                <div class="wizard-icon">🔑</div>
+                <h2 class="wizard-title">Eagle API Token（可选）</h2>
+                <p class="wizard-desc">
+                    如果您使用的是 Eagle 4.0 或更高版本，需要填写 API Token 才能正常使用。<br>
+                    Token 可以在 Eagle 设置 → 高级 → API Token 中找到并复制。
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label">Eagle API Token</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="onboardingTokenInput" class="form-input"
+                            placeholder="粘贴您的 Eagle API Token（如不使用 4.0+ 可留空）">
+                        <button class="input-eye-btn" id="onboardingTokenEyeBtn" type="button"
+                            title="显示/隐藏 Token">
+                            <svg id="onboardingEyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" />
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="form-hint" style="margin-top:8px">
+                        💡 提示：较低版本的 Eagle 不需要 Token。如果不确定，可先留空并点击"跳过"。
+                    </p>
+                </div>
+
+                <div class="wizard-actions">
+                    <button class="btn btn-secondary" id="step3SkipBtn">跳过</button>
+                    <button class="btn btn-primary" id="step3NextBtn">完成配置</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Complete -->
+            <div class="wizard-step" id="step4">
+                <div class="success-animation">
+                    <div class="checkmark-circle">
+                        <svg viewBox="0 0 80 80">
+                            <circle class="background" cx="40" cy="40" r="38" />
+                            <path class="checkmark" d="M22 40 L34 52 L58 28" />
+                        </svg>
+                    </div>
+                    <h2 class="wizard-title">配置完成！</h2>
+                    <p class="wizard-desc">
+                        恭喜！咒语便签已准备就绪。<br><br>
+                        ✨ 现在您可以：<br>
+                        &nbsp;&nbsp;• 在即梦平台悬停图片，点击"添加咒语"保存单张图片<br>
+                        &nbsp;&nbsp;• 点击插件图标打开面板，进行批量操作和高级设置<br>
+                        &nbsp;&nbsp;• 在本页面随时调整各项配置
+                    </p>
+                </div>
+                <div class="wizard-actions right">
+                    <button class="btn btn-primary" id="finishSetupBtn">开始使用</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Sections -->
+        <div id="settingsContent">
+            <!-- Connection Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">🔌</span>
+                        Eagle 连接设置
+                    </div>
+                    <span class="section-badge" id="connectionBadge">未检测</span>
+                </div>
+                <div class="section-body">
+                    <div class="connection-status" id="mainConnectionStatus" style="margin:16px 24px">
+                        <div class="status-icon-wrapper warning" id="mainStatusIcon">
+                            ⏳
+                        </div>
+                        <div class="status-info">
+                            <div class="status-title" id="mainStatusTitle">未检测</div>
+                            <div class="status-detail" id="mainStatusDetail">点击按钮检测连接状态</div>
+                        </div>
+                        <button class="btn btn-primary test-connection-btn" id="mainTestBtn">检测连接</button>
+                    </div>
+
+                    <div class="error-help" id="mainErrorHelp" style="margin:0 24px 16px;display:none">
+                        <div class="error-help-title">连接失败排查指南</div>
+                        <ul class="error-help-list">
+                            <li><strong>未运行：</strong>请确保 Eagle 软件已启动并处于运行状态</li>
+                            <li><strong>端口错误：</strong>检查 Eagle 设置中的 API 端口是否为 41595</li>
+                            <li><strong>Token 无效：</strong>Eagle 4.0+ 需要正确的 API Token，请检查 Token 是否完整复制</li>
+                            <li><strong>防火墙拦截：</strong>Windows 防火墙可能阻止了本地连接，尝试临时关闭防火墙测试</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group" style="padding:0 24px">
+                        <label class="form-label">API 服务端口</label>
+                        <div class="port-input-row">
+                            <span class="port-label">http://localhost:</span>
+                            <input type="text" id="eaglePortInput" class="port-input" value="41595" maxlength="5">
+                        </div>
+                        <p class="form-hint">Eagle 默认端口为 41595，如需修改请在 Eagle 设置中同步更改</p>
+                    </div>
+
+                    <div class="form-group" style="padding:0 24px">
+                        <label class="form-label">Eagle API Token</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="mainTokenInput" class="form-input"
+                                placeholder="粘贴 Eagle API Token（Eagle 4.0+ 需要）">
+                            <button class="input-eye-btn" id="mainTokenEyeBtn" type="button" title="显示/隐藏 Token">
+                                <svg id="mainEyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" />
+                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="form-hint">在 Eagle → 设置 → 高级 → API Token 中获取。Token 会自动保存。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tags Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">🏷️</span>
+                        标签分组设置
+                    </div>
+                    <span class="section-badge">自定义</span>
+                </div>
+                <div class="section-body">
+                    <div class="tags-container">
+                        <div class="tags-input-row">
+                            <input type="text" id="newTagInput" class="form-input" style="flex:1"
+                                placeholder="输入标签名称，按回车添加">
+                            <button class="btn btn-primary" id="addTagBtn" style="white-space:nowrap">添加标签</button>
+                        </div>
+                        <div class="tags-display" id="customTagsDisplay">
+                            <span class="tag-placeholder">暂无自定义标签，添加一些常用标签吧</span>
+                        </div>
+                        <p class="form-hint" style="margin-top:12px">
+                            💡 这些标签会自动添加到所有保存的图片中。点击标签可删除。
+                        </p>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">自动添加系统标签</div>
+                            <div class="setting-desc">自动添加"即梦"、"PromptNote"、"AI生成"标签</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="autoSystemTags" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Float Button Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">🎯</span>
+                        悬浮按钮设置
+                    </div>
+                    <span class="section-badge">交互</span>
+                </div>
+                <div class="section-body">
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">启用悬浮按钮</div>
+                            <div class="setting-desc">在即梦页面图片上显示"添加咒语"悬浮按钮</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="enableFloatBtn" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">按钮显示位置</div>
+                            <div class="setting-desc">选择悬浮按钮在图片上的显示位置</div>
+                        </div>
+                    </div>
+
+                    <div class="position-preview" id="positionPreview">
+                        <div class="position-grid">
+                            <div class="position-option active" data-position="top-left">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="top-center">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="top-right">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="middle-left">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="middle-center">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="middle-right">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="bottom-left">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="bottom-center">
+                                <div class="preview-btn"></div>
+                            </div>
+                            <div class="position-option" data-position="bottom-right">
+                                <div class="preview-btn"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">⚙️</span>
+                        其他设置
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">自动添加提示词注释</div>
+                            <div class="setting-desc">将图片的生成提示词保存到 Eagle 注释字段</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="autoAnnotation" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">记住文件夹选择</div>
+                            <div class="setting-desc">下次打开时自动恢复上次选择的 Eagle 文件夹</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="rememberFolder" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">显示保存成功动画</div>
+                            <div class="setting-desc">保存成功后显示视觉反馈</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="showSuccessAnim" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <div class="setting-label">首次使用引导</div>
+                            <div class="setting-desc">显示初始化配置向导</div>
+                        </div>
+                        <button class="btn btn-secondary" id="resetOnboardingBtn" style="font-size:12px;padding:8px 16px">
+                            重新显示向导
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">💾</span>
+                        数据管理
+                    </div>
+                    <span class="section-badge">备份 & 恢复</span>
+                </div>
+                <div class="section-body">
+                    <div class="export-actions">
+                        <button class="export-btn" id="exportSettingsBtn">
+                            <span>⚙️</span> 导出配置
+                        </button>
+                        <button class="export-btn" id="importSettingsBtn">
+                            <span>📥</span> 导入配置
+                        </button>
+                        <button class="export-btn" id="exportHistoryBtn">
+                            <span>📋</span> 导出保存记录
+                        </button>
+                        <button class="export-btn primary" id="clearDataBtn">
+                            <span>🗑️</span> 清除所有数据
+                        </button>
+                    </div>
+                    <p class="form-hint" style="padding:0 24px 16px">
+                        💡 导出配置可在不同浏览器/设备间同步设置。保存记录包含所有已保存图片的元数据。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="page-footer">
+            <p>PromptNote v2.0.0 · Made with ❤️ for AI Artists</p>
+            <p style="margin-top:4px">
+                <a href="https://jimeng.jianying.com/" target="_blank">访问即梦</a>
+                &nbsp;|&nbsp;
+                <a href="#" id="openSettingsFromOptions">扩展管理页面</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="importFileInput" accept=".json" style="display:none">
+
+    <script src="options.js"></script>
+</body>
+
+</html>
