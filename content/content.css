@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   咒语便签 PromptNote — 内容脚本注入样式 v2.1
+   咒语便签 PromptNote — 内容脚本注入样式 v2.0
    ═══════════════════════════════════════════════════════════════ */
 
 /* ─── 「添加咒语」悬浮按钮：absolute 定位于图片左上角 ─── */
@@ -7,7 +7,6 @@
 .pn-spell-btn {
     position: absolute !important;
     z-index: 9998 !important;
-    /* top/left 由 JS 动态设置 */
     display: inline-flex !important;
     align-items: center !important;
     gap: 5px !important;
@@ -36,7 +35,6 @@
     flex-shrink: 0 !important;
 }
 
-/* 父元素 hover 时显示 */
 *:hover>.pn-spell-btn:not(.saved),
 *:hover>*>.pn-spell-btn:not(.saved) {
     opacity: 1 !important;
@@ -52,7 +50,6 @@
     pointer-events: auto !important;
 }
 
-/* 已保存：绿色，持续显示 */
 .pn-spell-btn.saved {
     opacity: 1 !important;
     transform: translateY(0) scale(1) !important;
@@ -61,7 +58,6 @@
     box-shadow: 0 3px 12px rgba(5, 150, 105, 0.5) !important;
 }
 
-/* 加载中 */
 .pn-spell-btn.loading {
     opacity: 1 !important;
     transform: translateY(0) scale(1) !important;
@@ -70,15 +66,186 @@
 }
 
 @keyframes pn-pulse {
-
     0%,
     100% {
         box-shadow: 0 3px 12px rgba(124, 58, 237, 0.55);
     }
-
     50% {
         box-shadow: 0 3px 22px rgba(124, 58, 237, 0.95);
     }
+}
+
+/* ─── 悬浮控制面板 ─── */
+
+.pn-float-panel {
+    position: fixed !important;
+    z-index: 99999 !important;
+    top: 20px;
+    left: 20px;
+    display: block !important;
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+}
+
+.pn-float-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.pn-float-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 10px 16px !important;
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 24px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4) !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+}
+
+.pn-float-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.6) !important;
+    background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%) !important;
+}
+
+.pn-float-btn.active {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.4) !important;
+}
+
+.pn-float-txt {
+    display: inline !important;
+}
+
+.pn-float-selection {
+    margin-top: 10px !important;
+    padding: 12px 16px !important;
+    background: rgba(15, 15, 19, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.pn-selection-count {
+    font-size: 12px !important;
+    color: #a0a0b8 !important;
+    margin-bottom: 10px !important;
+    text-align: center !important;
+}
+
+.pn-selection-count strong {
+    color: #6366f1 !important;
+    font-size: 14px !important;
+}
+
+.pn-selection-actions {
+    display: flex !important;
+    gap: 8px !important;
+    justify-content: center !important;
+}
+
+.pn-mini-btn {
+    padding: 6px 12px !important;
+    background: rgba(99, 102, 241, 0.1) !important;
+    border: 1px solid rgba(99, 102, 241, 0.25) !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    color: #818cf8 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+}
+
+.pn-mini-btn:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.2) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+.pn-mini-btn:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+.pn-mini-btn.primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    border-color: transparent !important;
+    color: white !important;
+}
+
+.pn-mini-btn.primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4) !important;
+}
+
+/* ─── 选择模式覆盖层 ─── */
+
+.pn-selection-overlay {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 28px !important;
+    height: 28px !important;
+    z-index: 9997 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.pn-selection-checkbox {
+    width: 24px !important;
+    height: 24px !important;
+    background: rgba(15, 15, 19, 0.8) !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    backdrop-filter: blur(4px) !important;
+}
+
+.pn-selection-overlay:hover .pn-selection-checkbox {
+    border-color: rgba(99, 102, 241, 0.8) !important;
+    background: rgba(99, 102, 241, 0.2) !important;
+}
+
+.pn-selection-overlay.selected .pn-selection-checkbox {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    border-color: transparent !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5) !important;
+}
+
+.pn-selection-checkbox svg {
+    opacity: 0 !important;
+    transition: opacity 0.15s ease !important;
+}
+
+.pn-selection-overlay.selected .pn-selection-checkbox svg {
+    opacity: 1 !important;
+}
+
+.pn-image-selected {
+    outline: 3px solid #6366f1 !important;
+    outline-offset: -3px !important;
+}
+
+/* ─── 选择模式时图片悬停效果 ─── */
+
+.pn-selection-mode img[src*="byteimg.com"],
+.pn-selection-mode img[src*="dreamina-sign"],
+.pn-selection-mode img[src*="lf26-cn"],
+.pn-selection-mode img[src*="lf3-cn"] {
+    transition: outline 0.15s ease !important;
 }
 
 /* ─── Toast 通知 ─── */
