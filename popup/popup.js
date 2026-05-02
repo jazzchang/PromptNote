@@ -224,8 +224,23 @@ function extractAllImagesWithPrompts() {
         return !url || /avatar|\/icon|logo|emoji|placeholder|default|\.ico|favicon/.test(url);
     }
 
+    function hasSignatureParams(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.searchParams.has('x-signature') || 
+                   urlObj.searchParams.has('lk3s') ||
+                   urlObj.searchParams.has('sign') ||
+                   urlObj.searchParams.has('x-expires');
+        } catch {
+            return /x-signature|lk3s=|sign=|x-expires/.test(url);
+        }
+    }
+
     function cleanUrl(url) {
         if (!url || url.startsWith('data:') || url.startsWith('blob:')) return null;
+        if (hasSignatureParams(url)) {
+            return url;
+        }
         return url.replace(/(aigc_resize)[_:](\d+)[_:](\d+)/g, '$1:2048:2048');
     }
 
